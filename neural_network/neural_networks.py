@@ -1,10 +1,14 @@
+import json
 import os
 import sys
 
 root_path = os.path.join(os.path.dirname(__file__), "..")
 sys.path.append(root_path)
 
-from neural_network.activation_functions import ActivationFunction, ActivationFunctionType
+from neural_network.activation_functions import (
+    ActivationFunction,
+    ActivationFunctionType,
+)
 from neural_network.nodes import HiddenNode, InputNode, OutputNode
 
 
@@ -30,7 +34,9 @@ class NeuralNetwork:
         self.hidden_nodes = [
             HiddenNode(activation_function_type) for _ in range(hidden_size)
         ]
-        self.output_nodes = [OutputNode(activation_function_type) for _ in range(output_size)]
+        self.output_nodes = [
+            OutputNode(activation_function_type) for _ in range(output_size)
+        ]
 
         # Connect input, hidden, and output nodes
         for input_node in self.input_nodes:
@@ -58,27 +64,47 @@ class NeuralNetwork:
 
         # Return final output of the network
         return [output_node.get_output() for output_node in self.output_nodes]
-    
-    def update_output_weights_and_biases(self, delta: list[float], learning_rate: float) -> None:
+
+    def update_output_weights_and_biases(
+        self, delta: list[float], learning_rate: float
+    ) -> None:
         for i, output_node in enumerate(self.output_nodes):
             output_node.bias += learning_rate * delta[i]
             for connection in output_node.previous_layer:
-                connection.weight += learning_rate * delta[i] * connection.src_node.get_output()
-        
+                connection.weight += (
+                    learning_rate * delta[i] * connection.src_node.get_output()
+                )
+
     def backward(
         self,
         expected_output: list[float],
         learning_rate: float,
     ) -> None:
-        output_error = [expected_output[i] - self.output_nodes[i].get_output() for i in range(len(expected_output))]
-        output_delta = [output_error[i] * self.deactivation_function(self.output_nodes[i].get_output()) for i in range(len(output_error))]
+        output_error = [
+            expected_output[i] - self.output_nodes[i].get_output()
+            for i in range(len(expected_output))
+        ]
+        output_delta = [
+            output_error[i]
+            * self.deactivation_function(self.output_nodes[i].get_output())
+            for i in range(len(output_error))
+        ]
         self.update_output_weights_and_biases(output_delta, learning_rate)
 
         for _, hidden_node in enumerate(self.hidden_nodes):
-            hidden_error = sum([output_delta[j] * hidden_node.next_layer[j].weight for j in range(len(self.output_nodes))])
-            hidden_delta = hidden_error * self.deactivation_function(hidden_node.get_output())
+            hidden_error = sum(
+                [
+                    output_delta[j] * hidden_node.next_layer[j].weight
+                    for j in range(len(self.output_nodes))
+                ]
+            )
+            hidden_delta = hidden_error * self.deactivation_function(
+                hidden_node.get_output()
+            )
             for connection in hidden_node.previous_layer:
-                connection.weight += learning_rate * hidden_delta * connection.src_node.get_output()
+                connection.weight += (
+                    learning_rate * hidden_delta * connection.src_node.get_output()
+                )
             hidden_node.bias += learning_rate * hidden_delta
 
     def train(
@@ -99,13 +125,56 @@ class NeuralNetwork:
             "input_size": len(self.input_nodes),
             "hidden_size": len(self.hidden_nodes),
             "output_size": len(self.output_nodes),
-            "activation_function_type": self._activation_function_type_,
+            "activation_function_type": self._activation_function_type_.name,
             "input_nodes_weights": [
                 [connection.weight for connection in input_node.next_layer]
                 for input_node in self.input_nodes
             ],
+            "hidden_nodes_weights": [
+                [connection.weight for connection in hidden_node.next_layer]
+                for hidden_node in self.hidden_nodes
+            ],
+            "hidden_nodes_biases": [
+                hidden_node.bias for hidden_node in self.hidden_nodes
+            ],
+            "output_nodes_weights": [
+                [connection.weight for connection in output_node.previous_layer]
+                for output_node in self.output_nodes
+            ],
+            "output_nodes_biases": [
+                output_node.bias for output_node in self.output_nodes
+            ],
         }
 
         current_path = os.getcwd()
-        with open(f"{current_path}/models/{model_name}.json", "w") as file:
-            file.write(str(model_data))
+        with open(f"{current_path}/models/{model_name}", "w") as file:
+            json.dump(model_data, file)
+
+    @staticmethod
+    def load_neural_network_model(model_name: str) -> 'NeuralNetwork':
+        current_path = os.getcwd()
+        with open(f"{current_path}/models/{model_name}.json", "r") as file:
+            model_data = json.load(file)
+
+        nn = NeuralNetwork(
+            model_data["input_size"],
+            model_data["hidden_size"],
+            model_data["output_size"],
+            ActivationFunctionType[model_data["activation_function_type"]],
+        )
+
+        for i, input_node in enumerate(nn.input_nodes):
+            for j, connection in enumerate(input_node.next_layer):
+                connection.weight = model_data["input_nodes_weights"][i][j]
+
+        for i, hidden_node in enumerate(nn.hidden_nodes):
+            for j, connection in enumerate(hidden_node.next_layer):
+                connection.weight = model_data["hidden_nodes_weights"][i][j]
+            hidden_node.bias = model_data["hidden_nodes_biases"][i]
+
+        for i, output_node in enumerate(nn.output_nodes):
+            for j, connection in enumerate(output_node.previous_layer):
+                connection.weight = model_data["output_nodes_weights"][i][j]
+            output_node.bias = model_data["output_nodes_biases"][i]
+
+        return nn
