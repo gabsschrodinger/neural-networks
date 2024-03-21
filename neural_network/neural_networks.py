@@ -1,5 +1,11 @@
-from activation_functions import ActivationFunction, ActivationFunctionType
-from nodes import HiddenNode, InputNode, OutputNode
+import os
+import sys
+
+root_path = os.path.join(os.path.dirname(__file__), "..")
+sys.path.append(root_path)
+
+from neural_network.activation_functions import ActivationFunction, ActivationFunctionType
+from neural_network.nodes import HiddenNode, InputNode, OutputNode
 
 
 class NeuralNetwork:
@@ -83,7 +89,23 @@ class NeuralNetwork:
         learning_rate: float,
     ) -> None:
         for _ in range(epochs):
-            print(f"\n\nEpoch: {_}")
+            print(f"Epoch: {_}")
             for i in range(len(inputs)):
                 self.feedforward(inputs[i])
                 self.backward(expected_output[i], learning_rate)
+
+    def save_model(self, model_name: str) -> None:
+        model_data = {
+            "input_size": len(self.input_nodes),
+            "hidden_size": len(self.hidden_nodes),
+            "output_size": len(self.output_nodes),
+            "activation_function_type": self._activation_function_type_,
+            "input_nodes_weights": [
+                [connection.weight for connection in input_node.next_layer]
+                for input_node in self.input_nodes
+            ],
+        }
+
+        current_path = os.getcwd()
+        with open(f"{current_path}/models/{model_name}.json", "w") as file:
+            file.write(str(model_data))

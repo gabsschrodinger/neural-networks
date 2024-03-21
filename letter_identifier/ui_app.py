@@ -1,8 +1,14 @@
+import os
+import sys
+
+root_path = os.path.join(os.path.dirname(__file__), "..")
+sys.path.append(root_path)
+
 import json
 import tkinter as tk
 
-from activation_functions import ActivationFunctionType
-from neural_networks import NeuralNetwork
+from neural_network.activation_functions import ActivationFunctionType
+from neural_network.neural_networks import NeuralNetwork
 
 class PixelArtApp:
     def __init__(self, master, size=25):
@@ -16,18 +22,27 @@ class PixelArtApp:
         self.clear_button = tk.Button(master, text="Clear", command=self.clear_canvas)
         self.clear_button.pack()
 
-        self.neural_network = NeuralNetwork(12*15, 100, ActivationFunctionType.SIGMOID)
+        self.neural_network = NeuralNetwork(12*15, 50, 26, ActivationFunctionType.SIGMOID)
         self.neural_network_input = [0] * 12 * 15
         self.neural_network_training_file_path = "./neural_network_training_data.json"
         
-        self.train_neural_network()
+        # self.train_neural_network()
 
-        # self.training_data_expected_output = tk.Entry(master)
-        # self.training_data_expected_output.pack()
-        # self.add_training_data_button = tk.Button(master, text="Add training data", command=self.save_training_data)
-        # self.add_training_data_button.pack()
+        # self.guess_button = tk.Button(master, text="Guess", command=self.guess)
+        # self.guess_button.pack()
+
+        self.training_data_expected_output = tk.Entry(master)
+        self.training_data_expected_output.pack()
+        self.add_training_data_button = tk.Button(master, text="Add training data", command=self.save_training_data)
+        self.add_training_data_button.pack()
 
         self._alphabet_ = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+    def guess(self):
+        output = self.neural_network.feedforward(self.neural_network_input)
+        letter_index = output.index(max(output))
+        letter = self._alphabet_[letter_index]
+        print(letter)
 
     def fill_network_input(self, x, y):
         self.neural_network_input[y * 12 + x] = 1
@@ -41,9 +56,10 @@ class PixelArtApp:
     def train_neural_network(self):
         with open(self.neural_network_training_file_path, "r") as file:
             training_data = json.load(file).get("training_data", [])
-            inputs = [data.get("input") for data in training_data]
-            outputs = [data.get("output") for data in training_data]
-            self.neural_network.train(inputs, outputs, 10000, 0.1)
+        
+        inputs = [data.get("input") for data in training_data]
+        outputs = [data.get("output") for data in training_data]
+        self.neural_network.train(inputs, outputs, 20, 0.1)
 
     def save_training_data(self):
         expected_output = self.training_data_expected_output.get().upper()

@@ -1,3 +1,9 @@
+import os
+import sys
+
+root_path = os.path.join(os.path.dirname(__file__), "..")
+sys.path.append(root_path)
+
 from enum import Enum
 
 import numpy as np

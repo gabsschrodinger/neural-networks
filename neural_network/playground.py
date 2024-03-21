@@ -1,13 +1,15 @@
-import numpy as np
-from activation_functions import ActivationFunctionType
-from neural_networks import NeuralNetwork
+import os
+import sys
+
+root_path = os.path.join(os.path.dirname(__file__), "..")
+sys.path.append(root_path)
+
+from neural_network.activation_functions import ActivationFunctionType
+from neural_network.neural_networks import NeuralNetwork
 
 
 inputs = [[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0]]
 expected_output = [[0.0], [1.0], [1.0], [0.0]]
-
-# inputs = [[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0]]
-# expected_output = [[1.0], [0.0], [0.0], [1.0]]
 
 input_size = 2
 hidden_size = 100
