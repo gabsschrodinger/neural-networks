@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+from typing import Any, Callable
 
 root_path = os.path.join(os.path.dirname(__file__), "..")
 sys.path.append(root_path)
@@ -19,6 +20,7 @@ class NeuralNetwork:
         hidden_size: int,
         output_size: int,
         activation_function_type: ActivationFunctionType,
+        output_handler: Callable[[list[float]], Any] = lambda x: x,
     ) -> None:
         self._activation_function_type_: ActivationFunctionType = (
             activation_function_type
@@ -26,6 +28,8 @@ class NeuralNetwork:
         self.deactivation_function = ActivationFunction(
             activation_function_type
         ).get_activation_function_derivative()
+
+        self.output_handler = output_handler
 
         # Create input, hidden, and output nodes
         self.input_nodes = [
@@ -120,6 +124,14 @@ class NeuralNetwork:
                 self.feedforward(inputs[i])
                 self.backward(expected_output[i], learning_rate)
 
+    def get_output(self, inputs: list[float]) -> Any:
+        raw_output = self.feedforward(inputs)
+
+        return self.output_handler(raw_output)
+    
+    def set_output_handler(self, output_handler: Callable[[list[float]], Any]) -> None:
+        self.output_handler = output_handler
+
     def save_model(self, model_name: str) -> None:
         model_data = {
             "input_size": len(self.input_nodes),
@@ -151,9 +163,9 @@ class NeuralNetwork:
             json.dump(model_data, file)
 
     @staticmethod
-    def load_neural_network_model(model_name: str) -> 'NeuralNetwork':
+    def load_model(model_name: str) -> 'NeuralNetwork':
         current_path = os.getcwd()
-        with open(f"{current_path}/models/{model_name}.json", "r") as file:
+        with open(f"{current_path}/models/{model_name}", "r") as file:
             model_data = json.load(file)
 
         nn = NeuralNetwork(

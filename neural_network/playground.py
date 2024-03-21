@@ -26,7 +26,7 @@ for i in range(len(inputs)):
         f"Input: {inputs[i]}, Expected: {expected_output[i]}, Output: {nn.feedforward(inputs[i])}"
     )
 
-nn2 = NeuralNetwork.load_neural_network_model("playground_model")
+nn2 = NeuralNetwork.load_model("playground_model")
 
 for i in range(len(inputs)):
     print(
