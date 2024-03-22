@@ -22,6 +22,8 @@ class NeuralNetwork:
         activation_function_type: ActivationFunctionType,
         output_handler: Callable[[list[float]], Any] = lambda x: x,
     ) -> None:
+        self.epoch = 0
+
         self._activation_function_type_: ActivationFunctionType = (
             activation_function_type
         )
@@ -119,10 +121,11 @@ class NeuralNetwork:
         learning_rate: float,
     ) -> None:
         for _ in range(epochs):
-            print(f"Epoch: {_}")
+            print(f"Epoch: {self.epoch}")
             for i in range(len(inputs)):
                 self.feedforward(inputs[i])
                 self.backward(expected_output[i], learning_rate)
+            self.epoch += 1
 
     def get_output(self, inputs: list[float]) -> Any:
         raw_output = self.feedforward(inputs)
@@ -134,6 +137,7 @@ class NeuralNetwork:
 
     def save_model(self, model_name: str) -> None:
         model_data = {
+            "epoch": self.epoch,
             "input_size": len(self.input_nodes),
             "hidden_size": len(self.hidden_nodes),
             "output_size": len(self.output_nodes),
@@ -174,6 +178,8 @@ class NeuralNetwork:
             model_data["output_size"],
             ActivationFunctionType[model_data["activation_function_type"]],
         )
+
+        nn.epoch = model_data["epoch"]
 
         for i, input_node in enumerate(nn.input_nodes):
             for j, connection in enumerate(input_node.next_layer):
