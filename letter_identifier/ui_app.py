@@ -27,8 +27,6 @@ class PixelArtApp:
         self.neural_network_input = [0] * 12 * 15
         self.neural_network_training_file_path = "./neural_network_training_data.json"
 
-        # self.train_neural_network()
-
         self.guess_button = tk.Button(master, text="Guess", command=self.guess)
         self.guess_button.pack()
 
@@ -55,14 +53,6 @@ class PixelArtApp:
         letter_index = self._alphabet_.index(expected_output)
         neutral_output[letter_index] = 1.0
         return neutral_output
-
-    def train_neural_network(self):
-        with open(self.neural_network_training_file_path, "r") as file:
-            training_data = json.load(file).get("training_data", [])
-
-        inputs = [data.get("input") for data in training_data]
-        outputs = [data.get("output") for data in training_data]
-        self.neural_network.train(inputs, outputs, 20, 0.1)
 
     def save_training_data(self):
         expected_output = self.training_data_expected_output.get().upper()
