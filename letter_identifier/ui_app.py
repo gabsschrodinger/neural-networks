@@ -7,7 +7,7 @@ sys.path.append(root_path)
 import json
 import tkinter as tk
 
-from neural_network.neural_networks import NeuralNetwork
+from letter_identifier.model import get_letter_identifier_model
 
 
 class PixelArtApp:
@@ -22,10 +22,9 @@ class PixelArtApp:
         self.clear_button = tk.Button(master, text="Clear", command=self.clear_canvas)
         self.clear_button.pack()
 
-        # self.neural_network = NeuralNetwork(12*15, 50, 26, ActivationFunctionType.SIGMOID)
-        self.neural_network = NeuralNetwork.load_model("letter_identifier_model.json")
+        self.neural_network = get_letter_identifier_model()
         self.neural_network_input = [0] * 12 * 15
-        self.neural_network_training_file_path = "./neural_network_training_data.json"
+        self.neural_network_training_file_path = "letter_identifier/training_data.json"
 
         self.guess_button = tk.Button(master, text="Guess", command=self.guess)
         self.guess_button.pack()
@@ -40,9 +39,7 @@ class PixelArtApp:
         self._alphabet_ = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
     def guess(self):
-        output = self.neural_network.feedforward(self.neural_network_input)
-        letter_index = output.index(max(output))
-        letter = self._alphabet_[letter_index]
+        letter = self.neural_network.get_output(self.neural_network_input)
         print(letter)
 
     def fill_network_input(self, x, y):
@@ -64,10 +61,10 @@ class PixelArtApp:
         with open(self.neural_network_training_file_path, "r+") as file:
             current_data = json.load(file)
             current_training_data = current_data.get("training_data", [])
-            print(current_training_data)
             current_training_data.append(
                 {"input": self.neural_network_input, "output": expected_output}
             )
+            print({"input": self.neural_network_input, "output": expected_output})
             current_data["training_data"] = current_training_data
             file.seek(0)
             json.dump(current_data, file)
