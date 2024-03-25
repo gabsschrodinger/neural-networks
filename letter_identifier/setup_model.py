@@ -20,6 +20,6 @@ with open("./letter_identifier/training_data.json", "r") as file:
 inputs = [data.get("input") for data in training_data]
 expected_output = [data.get("output") for data in training_data]
 
-model.train(inputs, expected_output, epochs=50, learning_rate=0.1)
+model.train(inputs, expected_output, epochs=20, learning_rate=0.1)
 
 model.save_model("letter_identifier_model.json")
