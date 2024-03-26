@@ -11,13 +11,14 @@ from letter_identifier.model import get_letter_identifier_model
 
 
 class PixelArtApp:
-    def __init__(self, master, size=25):
+    def __init__(self, master: tk.Tk, size=25):
         self.master = master
         self.size = size
         self.canvas = tk.Canvas(master, width=size * 12, height=size * 15, bg="white")
         self.canvas.pack()
         self.create_grid()
         self.canvas.bind("<B1-Motion>", self.paint)
+        self.canvas.bind("<Button-1>", self.paint)
 
         self.clear_button = tk.Button(master, text="Clear", command=self.clear_canvas)
         self.clear_button.pack()
@@ -37,13 +38,26 @@ class PixelArtApp:
         self.add_training_data_button.pack()
 
         self._alphabet_ = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        self.erase_mode = False
+        self.canvas["cursor"] = ""
+
+        self.erase_button = tk.Button(
+            master, command=self.toggle_erase_mode
+        )
+        self.erase_button["text"] = "Erase"
+        self.erase_button.pack()
+
+    def toggle_erase_mode(self):
+        self.erase_mode = not self.erase_mode
+        self.erase_button["text"] = "Erase" if self.erase_mode else "Draw"
+        self.canvas["cursor"] = "dotbox" if self.erase_mode else ""
 
     def guess(self):
         letter = self.neural_network.get_output(self.neural_network_input)
         print(letter)
 
-    def fill_network_input(self, x, y):
-        self.neural_network_input[y * 12 + x] = 1
+    def fill_network_input(self, x: int, y: int):
+        self.neural_network_input[y * 12 + x] = 1 if not self.erase_mode else 0
 
     def _map_expected_output_(self, expected_output: str) -> list[float]:
         neutral_output = [0.0] * 26
@@ -83,7 +97,12 @@ class PixelArtApp:
             y = cell_y * self.size
             self.fill_network_input(cell_x, cell_y)
             self.canvas.create_rectangle(
-                x, y, x + self.size, y + self.size, fill="black"
+                x,
+                y,
+                x + self.size,
+                y + self.size,
+                fill=("black" if not self.erase_mode else "white"),
+                outline=("black" if not self.erase_mode else "gray"),
             )
 
     def clear_canvas(self):
@@ -94,7 +113,8 @@ class PixelArtApp:
 
 def main():
     root = tk.Tk()
-    root.title("Pixel Art App")
+    root.title("Letter Identifier")
+
     PixelArtApp(root)
     root.mainloop()
 
