@@ -34,10 +34,7 @@ class Node:
             node.previous_layer.append(node_connection)
 
     def get_output(self) -> float:
-        if self.type == NodeType.INPUT:
-            return self._value_
-        else:
-            return self.activation_function(self._value_)
+        return self.activation_function(self._value_)
 
     def calculate_value(self) -> None:
         product_from_previous_layer = sum(
@@ -67,6 +64,9 @@ class InputNode(Node):
 
     def set_value(self, value: float) -> None:
         self._value_ = value
+
+    def get_output(self) -> float:
+        return self._value_
 
 
 class OutputNode(Node):
